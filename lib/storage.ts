@@ -1,4 +1,4 @@
-import { put, list, type PutBlobResult } from "@vercel/blob";
+import { put, list, get } from "@vercel/blob";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { RunRecord } from "./types";
@@ -20,6 +20,16 @@ function safeFilename(id: string): string {
   return id.replace(/[:.]/g, "-") + ".json";
 }
 
+async function readBlobJson(pathname: string): Promise<RunRecord | null> {
+  const result = await get(pathname, { access: "private" });
+  if (!result || result.statusCode !== 200) return null;
+  try {
+    return (await new Response(result.stream).json()) as RunRecord;
+  } catch {
+    return null;
+  }
+}
+
 export async function saveRun(
   record: RunRecord,
 ): Promise<{ url: string; pathname: string }> {
@@ -32,9 +42,10 @@ export async function saveRun(
   }
 
   const pathname = `${RUNS_PREFIX}${record.id}.json`;
-  const result: PutBlobResult = await put(pathname, JSON.stringify(record), {
-    access: "public",
+  const result = await put(pathname, JSON.stringify(record), {
+    access: "private",
     addRandomSuffix: false,
+    allowOverwrite: true,
     contentType: "application/json",
   });
   return { url: result.url, pathname: result.pathname };
@@ -66,17 +77,7 @@ export async function listRuns(): Promise<RunRecord[]> {
   }
 
   const { blobs } = await list({ prefix: RUNS_PREFIX });
-  const records = await Promise.all(
-    blobs.map(async (blob) => {
-      const res = await fetch(blob.url, { cache: "no-store" });
-      if (!res.ok) return null;
-      try {
-        return (await res.json()) as RunRecord;
-      } catch {
-        return null;
-      }
-    }),
-  );
+  const records = await Promise.all(blobs.map((b) => readBlobJson(b.pathname)));
   return records
     .filter((r): r is RunRecord => r !== null)
     .sort((a, b) => (a.runAt < b.runAt ? 1 : -1));
@@ -95,10 +96,5 @@ export async function getRun(id: string): Promise<RunRecord | null> {
     }
   }
 
-  const { blobs } = await list({ prefix: `${RUNS_PREFIX}${id}.json` });
-  const blob = blobs[0];
-  if (!blob) return null;
-  const res = await fetch(blob.url, { cache: "no-store" });
-  if (!res.ok) return null;
-  return (await res.json()) as RunRecord;
+  return readBlobJson(`${RUNS_PREFIX}${id}.json`);
 }
