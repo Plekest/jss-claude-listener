@@ -32,16 +32,17 @@ export default async function RunsListPage() {
               <th className="py-2 pr-4 font-normal">Data</th>
               <th className="py-2 pr-4 font-normal">Semana</th>
               <th className="py-2 pr-4 font-normal">Trigger</th>
-              <th className="py-2 pr-4 font-normal">Com web</th>
-              <th className="py-2 pr-4 font-normal">Sem web</th>
-              <th className="py-2 pr-4 font-normal">{`Posição ${highlight}`}</th>
+              <th className="py-2 pr-4 font-normal">{`${highlight} (com web)`}</th>
+              <th className="py-2 pr-4 font-normal">{`${highlight} (sem web)`}</th>
               <th className="py-2 pr-4 font-normal"></th>
             </tr>
           </thead>
           <tbody>
             {runs.map((r) => {
-              const withWebRank = findRank(r.variants.with_web_search.parsed?.products, highlight);
-              const noWebRank = findRank(r.variants.without_web_search.parsed?.products, highlight);
+              const withWeb = r.variants.with_web_search.parsed?.products;
+              const withoutWeb = r.variants.without_web_search.parsed?.products;
+              const withWebRank = findRank(withWeb, highlight);
+              const noWebRank = findRank(withoutWeb, highlight);
               return (
                 <tr key={r.id} className="border-b border-neutral-900">
                   <td className="py-3 pr-4 font-mono text-xs">
@@ -49,12 +50,11 @@ export default async function RunsListPage() {
                   </td>
                   <td className="py-3 pr-4">{r.weekIso}</td>
                   <td className="py-3 pr-4 opacity-70">{r.trigger}</td>
-                  <td className="py-3 pr-4">{r.variants.with_web_search.parsed?.products.length ?? "—"}</td>
-                  <td className="py-3 pr-4">{r.variants.without_web_search.parsed?.products.length ?? "—"}</td>
                   <td className="py-3 pr-4 font-mono">
-                    <span className="opacity-90">{withWebRank ?? "—"}</span>
-                    <span className="opacity-40"> / </span>
-                    <span className="opacity-90">{noWebRank ?? "—"}</span>
+                    {formatRank(withWebRank, withWeb?.length)}
+                  </td>
+                  <td className="py-3 pr-4 font-mono">
+                    {formatRank(noWebRank, withoutWeb?.length)}
                   </td>
                   <td className="py-3 pr-4">
                     <Link
@@ -81,4 +81,9 @@ function findRank(
   if (!products) return null;
   const found = products.find((p) => p.name.toLowerCase().includes(brandLower));
   return found ? found.rank : null;
+}
+
+function formatRank(rank: number | null, total: number | undefined): string {
+  if (rank === null) return total ? `não listado / ${total}` : "—";
+  return total ? `${rank} / ${total}` : String(rank);
 }
