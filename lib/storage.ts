@@ -7,7 +7,13 @@ const RUNS_PREFIX = "runs/";
 const LOCAL_DATA_DIR = path.join(process.cwd(), "data", "runs");
 
 function useLocalFs(): boolean {
-  return !process.env.BLOB_READ_WRITE_TOKEN;
+  if (process.env.BLOB_READ_WRITE_TOKEN) return false;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "BLOB_READ_WRITE_TOKEN is required in production. Provision Vercel Blob in Storage tab and redeploy.",
+    );
+  }
+  return true;
 }
 
 function safeFilename(id: string): string {
