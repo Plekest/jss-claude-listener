@@ -33,7 +33,7 @@ const SAVE_RANKING_TOOL = {
 const WEB_SEARCH_TOOL = {
   type: WEB_SEARCH_TOOL_TYPE,
   name: "web_search",
-  max_uses: 5,
+  max_uses: 2,
 } as const;
 
 const SYSTEM_WITH_WEB =

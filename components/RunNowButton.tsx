@@ -12,12 +12,22 @@ export function RunNowButton() {
   const onClick = () => {
     setMessage(null);
     startTransition(async () => {
-      const result = await runNowAction();
-      if (result.ok) {
-        setMessage({ kind: "ok", text: `Run ${result.weekIso} criada.` });
-        router.refresh();
-      } else {
-        setMessage({ kind: "err", text: result.error });
+      try {
+        const result = await runNowAction();
+        if (result.ok) {
+          setMessage({ kind: "ok", text: `Run ${result.weekIso} criada.` });
+          router.refresh();
+        } else {
+          setMessage({ kind: "err", text: result.error });
+        }
+      } catch (err) {
+        const text =
+          err instanceof Error
+            ? err.message.includes("timed out")
+              ? "Função excedeu 60s na Vercel Hobby. Reduza o trabalho ou suba pro Pro."
+              : err.message
+            : "Erro desconhecido";
+        setMessage({ kind: "err", text });
       }
     });
   };
