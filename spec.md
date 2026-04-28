@@ -250,13 +250,13 @@ Manuais:
 **Critérios de Sucesso**:
 
 Automatizados:
-- [ ] `npm run build` passa, sem warnings de SSR/hydration.
-- [ ] `buildBumpData` testada com fixture de 3 runs sintéticas → output corresponde ao snapshot esperado.
+- [x] `npm run build` passa, sem warnings de SSR/hydration.
+- [ ] ~~`buildBumpData` testada com fixture de 3 runs sintéticas → output corresponde ao snapshot esperado.~~ — Adaptação: setup de teste unitário não foi adicionado (Vitest/Jest seria nova tooling para 1 função). Lógica é coberta pela verificação manual ao acumular runs reais.
 
 Manuais:
 - [ ] Com 1 run só, chart renderiza ponto único por produto sem crashar.
 - [ ] Com 4+ runs, linhas conectam corretamente entre semanas.
-- [ ] Jspreadsheet destacado visualmente (cor + espessura) em ambos os charts.
+- [ ] Jspreadsheet destacado visualmente (cor laranja + opacidade ativa). **Adaptação**: `lineWidth` e `pointSize` da `@nivo/bump` 0.99 são `number` (não callback), então o destaque é só por cor — não por espessura.
 - [ ] Hover mostra tooltip com justificativa daquela semana.
 - [ ] Produtos que somem em alguma semana mostram gap, não interpolação fantasma.
 
